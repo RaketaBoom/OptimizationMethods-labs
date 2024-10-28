@@ -80,44 +80,49 @@ public class SolverMinimum {
     }
 
     public Answer fibonacciMethod(double a, double b, double deltaX) {
-        int n = 1;
-        while (fibonacci(n) < (b - a) / deltaX) {
-            n++;
+        if (a >= b) {
+            throw new IllegalArgumentException("Left bound must be less than right bound.");
         }
 
-        double x1 = a + ((double) fibonacci(n - 2) / fibonacci(n)) * (b - a);
-        double x2 = a + ((double) fibonacci(n - 1) / fibonacci(n)) * (b - a);
+        // Определение числа итераций через длину интервала и deltaX
+        int n = 1;
+        double fibonacciN2 = 1, fibonacciN1 = 1, fibonacciN = 2;
+        while (fibonacciN * deltaX < b - a) {
+            n++;
+            fibonacciN2 = fibonacciN1;
+            fibonacciN1 = fibonacciN;
+            fibonacciN = fibonacciN1 + fibonacciN2;
+        }
+
+        double x1 = a + fibonacciN2 / fibonacciN * (b - a);
+        double x2 = a + fibonacciN1 / fibonacciN * (b - a);
         double f1 = function.apply(x1);
         double f2 = function.apply(x2);
 
-        for (int i = 0; i < n; i++) {
-            if (f1 > f2) {
-                a = x1;
-                x1 = x2;
-                f1 = f2;
-                x2 = a + ((double) fibonacci(n - i - 1) / fibonacci(n - i)) * (b - a);
-                f2 = function.apply(x2);
-            } else {
+        int iterationCount = 0;
+
+        for (int i = 1; i < n; i++) {
+            iterationCount++;
+            if (f1 < f2) {
                 b = x2;
                 x2 = x1;
                 f2 = f1;
-                x1 = a + ((double) fibonacci(n - i - 2) / fibonacci(n - i)) * (b - a);
+                x1 = a + fibonacciN2 / fibonacciN * (b - a);
                 f1 = function.apply(x1);
+            } else {
+                a = x1;
+                x1 = x2;
+                f1 = f2;
+                x2 = a + fibonacciN1 / fibonacciN * (b - a);
+                f2 = function.apply(x2);
             }
+            fibonacciN = fibonacciN1;
+            fibonacciN1 = fibonacciN2;
+            fibonacciN2 = fibonacciN - fibonacciN1;
         }
-        double idkWhatIsThis = b - a;
-        return new Answer(function.apply((a + b) / 2), idkWhatIsThis, n);
-    }
 
-
-    private static int fibonacci(int n) {
-        if (n <= 0){
-            return 0;
-        }
-        if (n == 1) {
-            return 1;
-        }
-        return fibonacci(n - 1) + fibonacci(n - 2);
+        double minimum = (a + b) / 2;
+        return new Answer(minimum, (b - a) / 2, iterationCount);
     }
 
 }
